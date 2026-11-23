@@ -30,8 +30,8 @@ jobs:
     name: 1. Unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements-dev.txt
       - name: Run unit tests (pipeline stops here if any test fails)
@@ -45,7 +45,7 @@ jobs:
     outputs:
       artifact: ${{ steps.pkg.outputs.artifact }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Package build-v${{ env.VERSION }}.zip
         id: pkg
         run: |
@@ -55,7 +55,7 @@ jobs:
           zip -r "dist/build-v$VERSION.zip" api worker frontend deploy docker-compose.yml -x '*/tests/*' '*__pycache__*'
           unzip -l "dist/build-v$VERSION.zip"
           echo "artifact=build-v$VERSION.zip" >> "$GITHUB_OUTPUT"
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v5
         with: { role-to-assume: "${{ vars.AWS_ROLE_ARN }}", aws-region: "${{ vars.AWS_REGION }}" }
       - name: Upload to S3 (versioned build + latest pointer)
         run: |
@@ -72,7 +72,7 @@ jobs:
       name: production
       url: ${{ vars.WEBSITE_URL }}
     steps:
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v5
         with: { role-to-assume: "${{ vars.AWS_ROLE_ARN }}", aws-region: "${{ vars.AWS_REGION }}" }
       - name: Download latest build from S3
         run: |

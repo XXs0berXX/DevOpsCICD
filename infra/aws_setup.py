@@ -170,7 +170,8 @@ deploy_role_arn = role(
     DEPLOY_ROLE,
     doc({"Effect": "Allow", "Principal": {"Federated": oidc_arn}, "Action": "sts:AssumeRoleWithWebIdentity",
          "Condition": {"StringEquals": {f"{OIDC_URL}:aud": "sts.amazonaws.com"},
-                       "StringLike": {f"{OIDC_URL}:sub": f"repo:{REPO}:*"}}}),
+                       # classic subject "repo:owner/name:..." and GitHub's immutable one "repo:owner@id/name@id:..."
+                       "StringLike": {f"{OIDC_URL}:sub": [f"repo:{REPO}:*", "repo:{}@*/{}@*:*".format(*REPO.split("/"))]}}}),
     doc(allow(["s3:ListBucket"], [f"arn:aws:s3:::{ARTIFACTS}", f"arn:aws:s3:::{WEBSITE}"]),
         allow(["s3:GetObject", "s3:PutObject"], [f"arn:aws:s3:::{ARTIFACTS}/*"]),
         allow(["s3:GetObject", "s3:PutObject", "s3:DeleteObject"], [f"arn:aws:s3:::{WEBSITE}/*"]),
