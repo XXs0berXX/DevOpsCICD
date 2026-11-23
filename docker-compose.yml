@@ -17,7 +17,6 @@ services:
       options:
         awslogs-region: ${AWS_REGION:-us-east-1}
         awslogs-group: nestmarket
-        awslogs-create-group: "true"
 
   worker:
     build: ./worker

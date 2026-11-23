@@ -22,7 +22,7 @@ P = "nestmarket"
 
 session = boto3.Session(region_name=REGION)
 ACCOUNT = session.client("sts").get_caller_identity()["Account"]
-ddb, s3, sqs, iam, ec2, ssm = (session.client(n) for n in ("dynamodb", "s3", "sqs", "iam", "ec2", "ssm"))
+ddb, s3, sqs, iam, ec2, ssm, logs = (session.client(n) for n in ("dynamodb", "s3", "sqs", "iam", "ec2", "ssm", "logs"))
 
 ARTIFACTS, WEBSITE, PHOTOS = (f"{P}-{kind}-{ACCOUNT}" for kind in ("artifacts", "web", "photos"))
 WEBSITE_URL = f"http://{WEBSITE}.s3-website-{REGION}.amazonaws.com"
@@ -71,6 +71,9 @@ sqs.create_queue(QueueName=QUEUE, Attributes={
     "VisibilityTimeout": "30",
     "RedrivePolicy": json.dumps({"deadLetterTargetArn": dlq_arn, "maxReceiveCount": "3"})})
 print("queues  ", QUEUE, "->", DLQ)
+
+ok_if_exists(logs.create_log_group, "ResourceAlreadyExistsException", logGroupName=P)  # container logs
+logs.put_retention_policy(logGroupName=P, retentionInDays=7)
 
 # ---------- S3 buckets ----------
 for b in (ARTIFACTS, WEBSITE, PHOTOS):
