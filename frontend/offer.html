@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NestMarket - Make an Offer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Make an Offer</h1>
+  <p id="summary"></p>
+  <form id="offer" class="card">
+    <label>Your name</label><input name="buyer_name" required>
+    <label>Your email</label><input name="buyer_email" type="email" required>
+    <label>Offer amount</label><input name="amount" type="number" min="1" required>
+    <label>Message to seller</label><textarea name="message" rows="3"></textarea>
+    <button>Send offer</button>
+    <div id="result"></div>
+  </form>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const id = param("id");
+  api("/api/listings/" + id).then((l) => {
+    document.getElementById("summary").innerHTML =
+      `For <a href="listing.html?id=${id}">${esc(l.title)}</a> - asking price <b>${money(l.price)}</b>`;
+  });
+
+  document.getElementById("offer").onsubmit = async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(e.target));
+    body.amount = Number(body.amount);
+    const out = document.getElementById("result");
+    try {
+      await api(`/api/listings/${id}/offers`, { method: "POST", body });
+      out.innerHTML = `<div class="msg">Offer sent! The seller gets an email.
+        Track it on your <a href="dashboard.html?email=${encodeURIComponent(body.buyer_email)}">dashboard</a>.</div>`;
+      e.target.querySelector("button").disabled = true;
+    } catch (err) {
+      out.innerHTML = `<div class="msg error">${esc(err.message)}</div>`;
+    }
+  };
+</script>
+</body>
+</html>

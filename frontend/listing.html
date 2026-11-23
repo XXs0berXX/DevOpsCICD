@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NestMarket - Listing</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="page"><p>Loading...</p></main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  (async () => {
+    const l = await api("/api/listings/" + param("id"));
+    document.title = "NestMarket - " + l.title;
+    document.getElementById("page").innerHTML = `
+      <h1>${esc(l.title)}</h1>
+      <div class="photos">${l.photo_urls.length ? l.photo_urls.map((u) => `<img src="${esc(u)}" alt="">`).join("") : photo()}</div>
+      <div class="card">
+        <div class="price">${money(l.price)}</div>
+        <p>${esc(l.city)} · ${l.property_type}${l.bedrooms ? " · " + l.bedrooms + " bedrooms" : ""}</p>
+        <p>${esc(l.description)}</p>
+        <p><small>Listed by ${esc(l.seller_name)}</small></p>
+        ${l.status === "active"
+          ? `<a class="btn" href="offer.html?id=${l.id}">Make an Offer</a>`
+          : `<span class="tag">${l.status.replace("_", " ")}</span>`}
+      </div>`;
+  })().catch((e) => (document.getElementById("page").innerHTML = `<p class="msg error">${esc(e.message)}</p>`));
+</script>
+</body>
+</html>

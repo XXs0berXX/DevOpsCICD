@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NestMarket - Sell</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Post a listing</h1>
+  <form id="sell" class="card">
+    <label>Title</label><input name="title" required placeholder="3-bed house near the park">
+    <label>City</label><input name="city" required>
+    <label>Type</label><select name="property_type"><option>house</option><option>flat</option><option>plot</option></select>
+    <label>Price</label><input name="price" type="number" min="1" required>
+    <label>Bedrooms</label><input name="bedrooms" type="number" min="0" value="0">
+    <label>Description</label><textarea name="description" rows="3"></textarea>
+    <label>Your name</label><input name="seller_name" required>
+    <label>Your email</label><input name="seller_email" type="email" required>
+    <label>Photos</label><input name="photos" type="file" accept="image/*" multiple>
+    <button>Publish listing</button>
+    <div id="result"></div>
+  </form>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  document.getElementById("sell").onsubmit = async (e) => {
+    e.preventDefault();
+    const out = document.getElementById("result");
+    const btn = e.target.querySelector("button");
+    btn.disabled = true;
+    try {
+      // 1) For each photo: ask the API for a presigned URL, then PUT the file straight to S3.
+      const keys = [];
+      for (const file of e.target.photos.files) {
+        out.innerHTML = `<div class="msg">Uploading ${esc(file.name)}...</div>`;
+        const up = await api("/api/uploads", { method: "POST", body: { filename: file.name, content_type: file.type || "image/jpeg" } });
+        const res = await fetch(up.upload_url, { method: "PUT", body: file, headers: { "Content-Type": file.type || "image/jpeg" } });
+        if (!res.ok) throw new Error("Photo upload failed");
+        keys.push(up.key);
+      }
+      // 2) Save the listing with the photo keys.
+      const body = Object.fromEntries([...new FormData(e.target)].filter(([k]) => k !== "photos"));
+      body.price = Number(body.price);
+      body.bedrooms = Number(body.bedrooms);
+      body.photo_keys = keys;
+      const { id } = await api("/api/listings", { method: "POST", body });
+      out.innerHTML = `<div class="msg">Published! <a href="listing.html?id=${id}">View listing</a> ·
+        <a href="dashboard.html?email=${encodeURIComponent(body.seller_email)}">Your dashboard</a></div>`;
+    } catch (err) {
+      out.innerHTML = `<div class="msg error">${esc(err.message)}</div>`;
+      btn.disabled = false;
+    }
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NestMarket - Browse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Find a property</h1>
+  <form id="filters" class="card filters">
+    <div><label>City</label><input name="city" placeholder="Any"></div>
+    <div><label>Type</label>
+      <select name="property_type"><option value="">Any</option><option>house</option><option>flat</option><option>plot</option></select></div>
+    <div><label>Max price</label><input name="max_price" type="number" placeholder="Any"></div>
+    <div><button>Search</button></div>
+  </form>
+  <div id="results" class="grid"></div>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const form = document.getElementById("filters");
+  async function load() {
+    const q = new URLSearchParams([...new FormData(form)].filter(([, v]) => v));
+    const items = await api("/api/listings?" + q);
+    document.getElementById("results").innerHTML = items.length ? items.map((l) => `
+      <a class="listing" href="listing.html?id=${l.id}">
+        ${photo(l.photo_urls[0])}
+        <div class="info">
+          <div class="price">${money(l.price)}</div>
+          <div>${esc(l.title)}</div>
+          <small>${esc(l.city)} · ${l.property_type}${l.bedrooms ? " · " + l.bedrooms + " bed" : ""}
+            ${l.status === "under_offer" ? ' · <span class="tag">under offer</span>' : ""}</small>
+        </div>
+      </a>`).join("") : "<p>No listings yet. <a href='sell.html'>Post the first one.</a></p>";
+  }
+  form.onsubmit = (e) => { e.preventDefault(); load(); };
+  load();
+</script>
+</body>
+</html>

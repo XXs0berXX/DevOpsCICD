@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NestMarket - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Dashboard</h1>
+  <form id="who" class="card">
+    <label>Your email (the link in your emails fills this in)</label>
+    <input name="email" type="email" required>
+    <button>Open dashboard</button>
+  </form>
+  <div id="content"></div>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const email = param("email");
+  const who = document.getElementById("who");
+  who.onsubmit = (e) => { e.preventDefault(); location.search = "?email=" + encodeURIComponent(who.email.value); };
+
+  async function decide(offerId, decision) {
+    await api(`/api/offers/${offerId}/decision`, { method: "POST", body: { seller_email: email, decision } });
+    load();
+  }
+
+  async function load() {
+    const d = await api("/api/dashboard?email=" + encodeURIComponent(email));
+    const offerRow = (o) => `<tr>
+      <td>${esc(o.buyer_name)}<br><small>${esc(o.buyer_email)}</small></td>
+      <td>${money(o.amount)}</td><td>${esc(o.message)}</td>
+      <td>${o.status === "pending"
+        ? `<button onclick="decide('${o.id}','accepted')">Accept</button>
+           <button class="secondary" onclick="decide('${o.id}','rejected')">Reject</button>`
+        : `<span class="tag ${o.status}">${o.status}</span>`}</td></tr>`;
+
+    document.getElementById("content").innerHTML = `
+      <h2>My listings</h2>
+      ${d.listings.map((l) => `<div class="card">
+          <b><a href="listing.html?id=${l.id}">${esc(l.title)}</a></b> · ${money(l.price)} ·
+          <span class="tag">${l.status.replace("_", " ")}</span>
+          ${l.offers.length ? `<table><tr><th>Buyer</th><th>Offer</th><th>Message</th><th></th></tr>${l.offers.map(offerRow).join("")}</table>`
+                            : "<p><small>No offers yet.</small></p>"}
+        </div>`).join("") || "<p><small>You have no listings.</small></p>"}
+      <h2>Offers I made</h2>
+      <div class="card">${d.offers_made.length ? `<table><tr><th>Property</th><th>Offer</th><th>Status</th></tr>
+        ${d.offers_made.map((o) => `<tr><td><a href="listing.html?id=${o.listing_id}">${esc(o.listing_title)}</a></td>
+          <td>${money(o.amount)}</td><td><span class="tag ${o.status}">${o.status}</span></td></tr>`).join("")}</table>`
+        : "<small>No offers made.</small>"}</div>`;
+  }
+
+  if (email) { who.email.value = email; load(); }
+</script>
+</body>
+</html>

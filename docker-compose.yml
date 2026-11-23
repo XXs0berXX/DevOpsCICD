@@ -1,0 +1,27 @@
+# Used on the EC2 instance (not locally). deploy/ec2_deploy.sh runs:
+#   docker compose up -d --build
+# from the unpacked build zip. The EC2 instance's IAM role gives both containers access to DynamoDB, S3,
+# SQS, SES and CloudWatch, so no AWS keys are stored here. Settings come from .env on the instance.
+name: nestmarket
+
+services:
+  api:
+    build: ./api
+    image: nestmarket-api:latest
+    ports:
+      - "80:8000"
+    env_file: .env
+    restart: unless-stopped
+    logging: &cloudwatch
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-us-east-1}
+        awslogs-group: nestmarket
+        awslogs-create-group: "true"
+
+  worker:
+    build: ./worker
+    image: nestmarket-worker:latest
+    env_file: .env
+    restart: unless-stopped
+    logging: *cloudwatch
