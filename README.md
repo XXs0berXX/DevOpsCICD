@@ -88,7 +88,7 @@ git push -> 1. Unit tests -> 2. Build build-v1.0.<run>.zip -> upload to S3 -> 3.
 | 3. Deploy | Downloads `builds/latest.zip` from S3. Frontend -> S3 static website bucket. Backend -> EC2 via SSM: the instance downloads the same zip from S3 and runs `deploy/ec2_deploy.sh` (`docker compose up -d --build`). |
 | 4. Verify | Checks that `API_URL/api/health` reports the new version and the website serves the new `config.js`. |
 
-The deployed version is shown in the website footer (`NestMarket · build v1.0.N`) and in `GET /api/health`.
+The deployed version is shown in the website footer (`NestMarket Â· build v1.0.N`) and in `GET /api/health`.
 
 GitHub logs in to AWS with OIDC (role `nestmarket-github-deploy`, only this repository can assume it), so no AWS keys are stored in GitHub.
 

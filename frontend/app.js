@@ -33,7 +33,7 @@ function photo(url) {
 
 function footer() {
   document.body.insertAdjacentHTML("beforeend", `
-    <footer>NestMarket · build v${esc(window.APP_VERSION || "dev")}</footer>`);
+    <footer>NestMarket &middot; build v${esc(window.APP_VERSION || "dev")}</footer>`);
 }
 
 header();
